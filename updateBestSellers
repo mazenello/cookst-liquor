@@ -1,8 +1,9 @@
 const https = require('https');
+const bestSellers = require('./bestSellers.js');
 
 // Configuration
-const webflowCollectionId = '6577d832bc98530c12441949'; // Replace with your Webflow collection ID
-const webflowApiToken = '4a64d72de5a4043662205c6e093adde8c1221bf7370bf04eaf559fc6585a23ac'; // Replace with your Webflow API token
+const webflowCollectionId = '65cd3b4736e5d976ee58865b'; // Replace with your Webflow collection ID
+const webflowApiToken = '07f757facf042b8064a06ecffe8162e5ff1e2cf5373ac4c18aa12b7fe0d56982'; // Replace with your Webflow API token
 const barnetApiUrl = 'http://barnetnetwork.com/api/shop/404-97/products?is_best_seller=true';
 
 // Helper function to make HTTP requests
@@ -27,11 +28,6 @@ function httpRequest(options, data = null) {
     });
 }
 
-// Fetch items from Barnet API
-async function fetchBarnetBestSellers() {
-    return httpRequest({ method: 'GET', url: barnetApiUrl });
-}
-
 // Fetch items from Webflow API
 async function fetchWebflowBestSellers() {
     const options = {
@@ -48,8 +44,18 @@ async function updateBestSellers() {
     try {
         // const barnetBestSellers = await fetchBarnetBestSellers();
         const webflowBestSellers = await fetchWebflowBestSellers();
-        console.log("I am here");
-        const barnetUrls = barnetBestSellers.items.map(item => item.url);
+        const barnetBestSellers = await bestSellers.getBestSellers();
+        const barnetUrls = barnetBestSellers.items.map(item => ({
+            image: item.image,
+            url: item.url,
+            regular_price: item.regular_price,
+            manufacturer_name: item.manufacturer_name,
+            description: item.description,
+            sale_price: item.sale_price
+          }));
+        console.log(barnetUrls)
+        return
+        // note to future maz: we got to getting the data refined from barnet, next we need to compare the data in webflow and push changes.
         const webflowUrls = webflowBestSellers.items.map(item => item["product-link"]);
 
         // Delete items from Webflow that are not in Barnet's list
@@ -68,6 +74,15 @@ async function updateBestSellers() {
 
     } catch (error) {
         console.error('An error occurred:', error.message);
+    }
+}
+
+async function testingShit() {
+    try {
+        const data = await bestSellers.getBestSellers();
+        console.log(data.paginator.items_count);
+    } catch(error) {
+        console.error('Error:', error);
     }
 }
 

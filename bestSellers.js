@@ -15,31 +15,6 @@ const featuredUrl = apiUrl+"?is_featured=true"
 // Staff picks Url
 const staffPicksUrl = apiUrl+"?is_staff_picks=true"
 
-// Function to make the GET request
-function getApiData(url) {
-  https.get(url, (res) => {
-    let data = '';
-
-    // A chunk of data has been received.
-    res.on('data', (chunk) => {
-      data += chunk;
-    });
-
-    // The whole response has been received. Print out the result.
-    res.on('end', () => {
-      try {
-        const parsedData = JSON.parse(data);
-        console.log(parsedData);
-      } catch (e) {
-        console.error(e.message);
-      }
-    });
-
-  }).on("error", (err) => {
-    console.error("Error: " + err.message);
-  });
-}
-
 async function fetchData(url) {
     try {
         // Fetch data from the provided URL
@@ -53,14 +28,14 @@ async function fetchData(url) {
         // Parse the response body (assuming it's JSON)
         let data = await response.json();
 
-        // Use the parsed data
-        // console.log(data);
         return data;
     } catch (error) {
         console.error('Error fetching data: ', error);
     }
 }
 
-fetchData(bestSellerUrl).then(function(bestSellers){
-    console.log(bestSellers.paginator.items_count);    
-})
+async function getBestSellers() {
+  return fetchData(bestSellerUrl)
+}
+
+module.exports = { getBestSellers } 
