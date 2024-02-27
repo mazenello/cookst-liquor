@@ -1,6 +1,6 @@
 const https = require('https');
 const collectionId = '6577d832bc98530c12441949'; // Staff picks collection
-const apiToken = '4a64d72de5a4043662205c6e093adde8c1221bf7370bf04eaf559fc6585a23ac'; // Replace with your Webflow API token
+const apiToken = '07f757facf042b8064a06ecffe8162e5ff1e2cf5373ac4c18aa12b7fe0d56982'; // Replace with your Webflow API token
 
 function getCollectionItems() {
     return new Promise((resolve, reject) => {
@@ -35,7 +35,7 @@ function getCollectionItems() {
     });
 }
 
-function deleteItem(itemId) {
+function deleteItem(itemId, collectionId) {
     return new Promise((resolve, reject) => {
         const options = {
             hostname: 'api.webflow.com',
@@ -65,6 +65,48 @@ function deleteItem(itemId) {
     });
 }
 
+function addItem(item, collectionId) {
+
+    // Data for the new collection item
+const itemData = JSON.stringify({
+    fields: {
+      name: item.description, // Ensure this matches your collection's requirements
+      _archived: false,
+      _draft: false,
+      slug: item.url
+      // Add other fields as per your collection's design
+    }
+  });
+  
+  const options = {
+    hostname: 'api.webflow.com',
+    path: `/collections/${collectionId}/items`,
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiToken}`,
+      'accept-version': '1.0.0',
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(itemData),
+    }
+  };
+  
+  const req = https.request(options, (res) => {
+    console.log(`Status Code: ${res.statusCode}`);
+  
+    res.on('data', (d) => {
+      process.stdout.write(d);
+    });
+  });
+  
+  req.on('error', (e) => {
+    console.error(e);
+  });
+  
+  req.write(itemData);
+  req.end();
+
+}
+
 async function deleteAllItems() {
     try {
         const items = await getCollectionItems();
@@ -77,4 +119,7 @@ async function deleteAllItems() {
     }
 }
 
-deleteAllItems();
+// deleteAllItems();
+
+
+module.exports = {deleteAllItems, deleteItem, addItem}

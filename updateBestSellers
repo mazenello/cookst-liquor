@@ -1,10 +1,12 @@
 const https = require('https');
 const bestSellers = require('./bestSellers.js');
+const collection = require('./deleteCollectionItems.js')
 
 // Configuration
 const webflowCollectionId = '65cd3b4736e5d976ee58865b'; // Replace with your Webflow collection ID
 const webflowApiToken = '07f757facf042b8064a06ecffe8162e5ff1e2cf5373ac4c18aa12b7fe0d56982'; // Replace with your Webflow API token
 const barnetApiUrl = 'http://barnetnetwork.com/api/shop/404-97/products?is_best_seller=true';
+const collectionId = "65cd3b4736e5d976ee58865b" // best sellers.
 
 // Helper function to make HTTP requests
 function httpRequest(options, data = null) {
@@ -45,7 +47,7 @@ async function updateBestSellers() {
         // const barnetBestSellers = await fetchBarnetBestSellers();
         const webflowBestSellers = await fetchWebflowBestSellers();
         const barnetBestSellers = await bestSellers.getBestSellers();
-        const barnetUrls = barnetBestSellers.items.map(item => ({
+        const barnetItems = barnetBestSellers.items.map(item => ({
             image: item.image,
             url: item.url,
             regular_price: item.regular_price,
@@ -53,22 +55,21 @@ async function updateBestSellers() {
             description: item.description,
             sale_price: item.sale_price
           }));
-        console.log(barnetUrls)
-        return
         // note to future maz: we got to getting the data refined from barnet, next we need to compare the data in webflow and push changes.
-        const webflowUrls = webflowBestSellers.items.map(item => item["product-link"]);
-
+        const webflowUrls = webflowBestSellers.items.map(item => item["description"]);
+        
         // Delete items from Webflow that are not in Barnet's list
         for (const item of webflowBestSellers.items) {
-            if (!barnetUrls.includes(item["product-link"])) {
-                // Delete item logic here
+            if (!barnetItems.includes(item.fieldData["name"])) {
+                collection.deleteItem(item.id, collectionId);
             }
         }
 
         // Add new items from Barnet to Webflow
         for (const item of barnetBestSellers.items) {
-            if (!webflowUrls.includes(item.url)) {
-                // Add item logic here
+            if (!webflowUrls.includes(item.name)) {
+                console.log("oh hi")
+                collection.addItem(item, collectionId)
             }
         }
 
