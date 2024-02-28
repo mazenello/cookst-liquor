@@ -1,12 +1,12 @@
+// Dependencies
 const https = require('https');
 const bestSellers = require('./bestSellers.js');
-const collection = require('./deleteCollectionItems.js')
+const collection = require('./collectionItems.js')
+const config = require('./config.js')
 
 // Configuration
-const webflowCollectionId = '65cd3b4736e5d976ee58865b'; // Replace with your Webflow collection ID
-const webflowApiToken = '07f757facf042b8064a06ecffe8162e5ff1e2cf5373ac4c18aa12b7fe0d56982'; // Replace with your Webflow API token
-const barnetApiUrl = 'http://barnetnetwork.com/api/shop/404-97/products?is_best_seller=true';
-const collectionId = "65cd3b4736e5d976ee58865b" // best sellers.
+const webflowApiToken = config.API_TOKEN; // Replace with your Webflow API token
+const collectionId = config.BEST_SELLERS_COLLECTION_ID
 
 // Helper function to make HTTP requests
 function httpRequest(options, data = null) {
@@ -35,7 +35,7 @@ async function fetchWebflowBestSellers() {
     const options = {
         method: 'GET',
         hostname: 'api.webflow.com',
-        path: `/v2/collections/${webflowCollectionId}/items`,
+        path: `/v2/collections/${collectionId}/items`,
         headers: { 'Authorization': `Bearer ${webflowApiToken}`, 'accept-version': '1.0.0' }
     };
     return httpRequest(options);
@@ -48,13 +48,17 @@ async function updateBestSellers() {
         const webflowBestSellers = await fetchWebflowBestSellers();
         const barnetBestSellers = await bestSellers.getBestSellers();
         const barnetItems = barnetBestSellers.items.map(item => ({
-            image: item.image,
-            url: item.url,
-            regular_price: item.regular_price,
-            manufacturer_name: item.manufacturer_name,
-            description: item.description,
-            sale_price: item.sale_price
-          }));
+            "photo": {
+                "url": config.BARNETT_IMG_PREFIX+item.image
+            },
+            "price": item.regular_price,
+            "sale-pirce": item.sale_price,
+            "inventory-available": item.on_hand,
+            "size": item.unit_name,
+            "name": item.description,
+            "on-sale": item.is_sale,
+        }));
+
         // note to future maz: we got to getting the data refined from barnet, next we need to compare the data in webflow and push changes.
         const webflowUrls = webflowBestSellers.items.map(item => item["description"]);
         
